@@ -267,8 +267,6 @@ Then open your browser at:
 http://127.0.0.1:8000
 ```
 
-The frontend, backend, and model are all served from this single origin — no separate frontend server or `.env` configuration needed for local development.
-
 ---
 
 

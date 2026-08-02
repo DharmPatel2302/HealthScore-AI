@@ -24,33 +24,20 @@
 
 ## 📋 Table of Contents
 
-- [🎯 Project Overview](#-project-overview)
+- [Project Overview](#-project-overview)
 - [Demo](#-demo)
-- [Features](#-features)
 - [Tech Stack](#-tech-stack)
 - [Project Architecture](#-project-architecture)
-- [Folder Structure](#-folder-structure)
 - [Dataset](#-dataset)
-- [Data Preprocessing](#-data-preprocessing)
 - [Model Training](#-model-training)
 - [Model Evaluation](#-model-evaluation)
 - [Working Flow](#-working-flow)
-- [API Documentation](#-api-documentation)
 - [Installation Guide](#-installation-guide)
 - [How to Run](#-how-to-run)
-- [Deployment](#-deployment-railway)
-- [Future Improvements](#-future-improvements)
-- [Challenges Faced](#-challenges-faced)
-- [Key Learnings](#-key-learnings)
-- [Interview Questions](#-interview-questions)
-- [Resume Description](#-resume-description)
-- [License](#-license)
 - [Author](#-author)
-- [Project Score & Roadmap to 10/10](#-project-score-recruiter--engineer--interviewer-perspective)
-
 ---
 
-## 🎯 Project Overview
+## Project Overview
 
 **HealthScore AI** predicts a student's **Mental Health Score** (a continuous value roughly between 3 and 10) from their social media habits, sleep, study time, physical activity, and self-reported stress level. It is framed and solved as a **regression problem**, not a classification one — the output is a real number, not a category.
 
@@ -70,17 +57,26 @@ Students who want a quick, data-driven check on how their current routine (scree
 
 **🔗 Live Demo:** https://healthscore-ai-production.up.railway.app/ 
 
-| Screenshot | Placeholder |
-|---|---|
-| Homepage / Hero Section | `images/homepage.png` |
-| Prediction Form (Input Dashboard) | `images/form.png` |
-| Prediction Result (Arc Gauge + Score) | `images/result.png` |
-| Light / Dark Theme Toggle | `images/theme-toggle.png` |
-| Model Comparison Results (from notebook) | `images/model-comparison.png` |
-| Correlation Heatmap (EDA) | `images/correlation-heatmap.png` |
-| Residual Plot | `images/residual-plot.png` |
-| Feature Importance (XGBoost) | `images/feature-importance.png` |
 
+### Home Page
+![Home Page](public/screenshots/image.png)
+
+### About Page
+![About Page](public/screenshots/image-1.png)
+![About Page_2](public/screenshots/image-2.png)
+![About Page_3](public/screenshots/image-3.png)
+
+### Gallery Page
+![Gallery Page](public/screenshots/image-4.png)
+#### Gallery Page --> Apply Filter
+![Gallery Filter](public/screenshots/image-5.png)
+#### Gallery Page --> Download
+![Download Img](public/screenshots/image-6.png)
+
+### Prediction
+![Analysis of leaf](public/screenshots/image-7.png)
+![Micro_Interaction](public/screenshots/image-8.png)
+![Result](public/screenshots/image-9.png)
 
 
 

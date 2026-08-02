@@ -158,7 +158,7 @@ No class imbalance in the traditional sense (this is regression), but `Country` 
 
 ---
 
-## 🤖 Model Training
+## Model Training
 
 ### Models compared
 
@@ -190,7 +190,7 @@ The **entire pipeline** is saved — not just the XGBoost model object — so th
 
 ---
 
-## 📈 Model Evaluation
+## Model Evaluation
 
 
 ![Model_Eval](public/screenshots/image-5.png)
@@ -224,7 +224,7 @@ The **entire pipeline** is saved — not just the XGBoost model object — so th
 
 
 
-## ⚙️ Installation Guide
+## Installation Guide
 
 ### Prerequisites
 
@@ -254,7 +254,7 @@ pip install -r requirements.txt
 
 ---
 
-## ▶️ How to Run
+## How to Run
 
 ```bash
 # From the project root
@@ -272,7 +272,7 @@ The frontend, backend, and model are all served from this single origin — no s
 ---
 
 
-## 👤 Author
+## Author
 
 **Dharm Patel**
 

@@ -23,18 +23,16 @@
 
 ## 📋 Table of Contents
 
-- [Project Overview](#-project-overview)
-- [Demo](#-demo)
-- [Tech Stack](#-tech-stack)
-- [Project Architecture](#-project-architecture)
-- [Dataset](#-dataset)
-- [Model Training](#-model-training)
-- [Model Evaluation](#-model-evaluation)
-- [Working Flow](#-working-flow)
-- [Installation Guide](#-installation-guide)
-- [How to Run](#-how-to-run)
-- [Author](#-author)
----
+- [Project Overview](#project-overview)
+- [Demo](#demo)
+- [Tech Stack](#tech-stack)
+- [Project Architecture](#project-architecture)
+- [Dataset](#dataset)
+- [Model Training](#model-training)
+- [Model Evaluation](#model-evaluation)
+- [Installation Guide](#installation-guide)
+- [How to Run](#how-to-run)
+- [Author](#author)
 
 ## Project Overview
 

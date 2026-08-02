@@ -14,7 +14,9 @@ const API_URL = "http://127.0.0.1:8000/predict";
 // Adjust SCORE_MAX if your model outputs a different range.
 const SCORE_MAX = 10;
 
-// Circle math constants used for mini rings only.
+// Circle math constants used for the SVG gauge & mini rings.
+const GAUGE_RADIUS = 92;
+const GAUGE_CIRCUMFERENCE = 2 * Math.PI * GAUGE_RADIUS; // ~578
 const MINI_RING_RADIUS = 24;
 const MINI_RING_CIRCUMFERENCE = 2 * Math.PI * MINI_RING_RADIUS; // ~151
 
@@ -53,144 +55,80 @@ themeToggleBtn.addEventListener("click", () => {
 
 // -----------------------------------------------------
 // SLIDER INTERACTIONS
-// Each slider syncs two-way with an editable number input bubble.
-// Dragging the slider updates the input; typing in the input moves the slider.
+// Each slider updates its own value bubble AND the matching
+// summary card on the right-hand dashboard, live as the user drags.
 // -----------------------------------------------------
 
 /**
- * Wires up a range slider ↔ editable number input (two-way sync).
- * Also optionally updates a dashboard stat text + mini progress ring.
- *
- * @param {object} opts
- *   sliderId  — id of the <input type="range">
- *   bubbleId  — id of the <input type="number"> bubble
- *   isHours   — true → bubble shows plain number (e.g. "6.5"), false → formatFn used for stat only
- *   isCount   — true → integer, no decimal (for unlocks)
- *   statId    — optional dashboard stat element id
- *   ringId    — optional SVG ring element id
- *   ringMax   — value that represents 100% fill on the ring
+ * Wires up a range input so that moving it:
+ *  1. Updates a small text bubble showing the current value.
+ *  2. Optionally updates a dashboard stat + mini progress ring.
  */
-function setupSlider({ sliderId, bubbleId, isHours = true, isCount = false, statId, ringId, ringMax }) {
+function setupSlider({ sliderId, bubbleId, formatFn, statId, ringId, ringMax }) {
   const slider = document.getElementById(sliderId);
   const bubble = document.getElementById(bubbleId);
-  const stat   = statId ? document.getElementById(statId) : null;
-  const ring   = ringId ? document.getElementById(ringId) : null;
+  const stat = statId ? document.getElementById(statId) : null;
+  const ring = ringId ? document.getElementById(ringId) : null;
 
-  const decimals = isCount ? 0 : 1;
-
-  /** Format the stat card text (includes unit suffix). */
-  function formatStat(v) {
-    if (isCount) return `${Math.round(v)}/day`;
-    return `${v.toFixed(1)} hrs`;
-  }
-
-  /** Sync everything from the current slider value. */
-  function syncFromSlider() {
+  function update() {
     const value = parseFloat(slider.value);
+    const formatted = formatFn(value);
 
-    // Update the editable bubble to match
-    bubble.value = isCount ? Math.round(value) : value.toFixed(decimals);
-
-    // Subtle scale pop on the bubble
+    bubble.textContent = formatted;
+    // tiny "pop" animation on the bubble for tactile feedback
     bubble.style.transform = "scale(1.12)";
     setTimeout(() => (bubble.style.transform = "scale(1)"), 120);
 
-    // Update dashboard stat card text
-    if (stat) stat.textContent = formatStat(value);
+    if (stat) stat.textContent = formatted;
 
-    // Update mini progress ring
     if (ring && ringMax) {
-      const ratio  = Math.min(value / ringMax, 1);
+      const ratio = Math.min(value / ringMax, 1);
       const offset = MINI_RING_CIRCUMFERENCE * (1 - ratio);
       ring.style.strokeDashoffset = offset;
     }
   }
 
-  /** Sync slider (and stat/ring) from the number input the user typed. */
-  function syncFromBubble() {
-    let value = parseFloat(bubble.value);
-    if (isNaN(value)) return;
-
-    // Clamp to slider's own min/max
-    const min = parseFloat(slider.min);
-    const max = parseFloat(slider.max);
-    value = Math.min(Math.max(value, min), max);
-
-    // Write back clamped value so the bubble shows the real clamped number
-    bubble.value = isCount ? Math.round(value) : value.toFixed(decimals);
-
-    // Move the slider thumb
-    slider.value = value;
-
-    // Update stat + ring
-    if (stat) stat.textContent = formatStat(value);
-
-    if (ring && ringMax) {
-      const ratio  = Math.min(value / ringMax, 1);
-      const offset = MINI_RING_CIRCUMFERENCE * (1 - ratio);
-      ring.style.strokeDashoffset = offset;
-    }
-  }
-
-  // Slider drag → update bubble
-  slider.addEventListener("input", syncFromSlider);
-
-  // Select all text when user clicks into the bubble so typing immediately
-  // replaces the old value rather than appending to it
-  bubble.addEventListener("focus", () => bubble.select());
-
-  // User types in the bubble → sync only when they finish typing
-  // (on blur or pressing Enter) so mid-type keystrokes don't jump the slider.
-  bubble.addEventListener("change", syncFromBubble);
-  bubble.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); syncFromBubble(); bubble.blur(); }
-  });
-
-  // Prevent scroll-wheel from accidentally changing value while scrolling the page
-  bubble.addEventListener("wheel", (e) => { e.preventDefault(); }, { passive: false });
-
-  // Initialise both on page load
-  syncFromSlider();
+  slider.addEventListener("input", update);
+  update(); // initialize on page load
 }
 
 setupSlider({
   sliderId: "avg_daily_usage_hours",
   bubbleId: "usageValue",
-  isHours:  true,
-  statId:   "statUsage",
-  ringId:   "ringUsage",
-  ringMax:  24,
+  formatFn: (v) => `${v.toFixed(1)} hrs`,
+  statId: "statUsage",
+  ringId: "ringUsage",
+  ringMax: 12,
 });
 
 setupSlider({
   sliderId: "daily_unlocks",
   bubbleId: "unlocksValue",
-  isHours:  false,
-  isCount:  true,
+  formatFn: (v) => `${Math.round(v)}/day`,
 });
 
 setupSlider({
   sliderId: "study_hours",
   bubbleId: "studyValue",
-  isHours:  true,
-  statId:   "statStudy",
-  ringId:   "ringStudy",
-  ringMax:  24,
+  formatFn: (v) => `${v.toFixed(1)} hrs`,
+  statId: "statStudy",
+  ringId: "ringStudy",
+  ringMax: 12,
 });
 
 setupSlider({
   sliderId: "sleep_hours_per_night",
   bubbleId: "sleepValue",
-  isHours:  true,
-  statId:   "statSleep",
-  ringId:   "ringSleep",
-  ringMax:  24,
+  formatFn: (v) => `${v.toFixed(1)} hrs`,
+  statId: "statSleep",
+  ringId: "ringSleep",
+  ringMax: 10,
 });
 
 setupSlider({
   sliderId: "physical_activity_hours",
   bubbleId: "activityValue",
-  isHours:  true,
+  formatFn: (v) => `${v.toFixed(1)} hrs`,
 });
 
 // Stress level select also drives its own dashboard card + ring.
@@ -310,40 +248,17 @@ function setLoadingState(isLoading) {
 }
 
 // -----------------------------------------------------
-// RENDER PREDICTION: arc fill, needle, animated counter, badge, copy
+// RENDER PREDICTION: gauge fill, animated counter, badge, copy
 // -----------------------------------------------------
-const arcProgress    = document.getElementById("arcProgress");
-const arcNeedle      = document.getElementById("arcNeedle");
-const arcNeedleInner = document.getElementById("arcNeedleInner");
-const scoreCounter   = document.getElementById("scoreCounter");
-const statusBadge    = document.getElementById("statusBadge");
+const gaugeProgress = document.getElementById("gaugeProgress");
+const scoreCounter = document.getElementById("scoreCounter");
+const statusBadge = document.getElementById("statusBadge");
 const interpretationText = document.getElementById("interpretationText");
-const arcMeterCard   = document.querySelector(".arc-meter-card");
-const retestBtn      = document.getElementById("retestBtn");
+const gaugeCard = document.querySelector(".gauge-card");
 
-// Arc math constants for the SVG path "M 24 148 A 116 116 0 0 1 256 148"
-// Centre of the circle: (140, 148), radius: 116
-// Arc sweeps 180° from left (angle=180°) to right (angle=0°)
-const ARC_CX = 140, ARC_CY = 148, ARC_R = 116;
-const ARC_LENGTH = Math.PI * ARC_R; // ≈ 364.4
-
-// Initialise: arc starts fully hidden
-arcProgress.style.strokeDasharray  = ARC_LENGTH;
-arcProgress.style.strokeDashoffset = ARC_LENGTH;
-
-/**
- * Given a score ratio (0–1), return the (x, y) of the corresponding
- * point on the semicircle. At ratio=0 → left end, ratio=1 → right end.
- */
-function arcPoint(ratio) {
-  // Angle goes from 180° (left) to 0° (right) as ratio increases
-  const angleDeg = 180 - ratio * 180;
-  const angleRad = (angleDeg * Math.PI) / 180;
-  return {
-    x: ARC_CX + ARC_R * Math.cos(angleRad),
-    y: ARC_CY - ARC_R * Math.sin(angleRad), // SVG y is inverted
-  };
-}
+// Prepare the gauge circle stroke for animation (starts empty).
+gaugeProgress.style.strokeDasharray = GAUGE_CIRCUMFERENCE;
+gaugeProgress.style.strokeDashoffset = GAUGE_CIRCUMFERENCE;
 
 /**
  * Maps a 0-10 score to a status label, CSS class, color and message,
@@ -396,97 +311,49 @@ function getScoreBand(score) {
 }
 
 /**
- * Animates the arc, needle, counter, status badge and interpretation text
- * once a prediction is received.
+ * Animates the gauge ring, the numeric counter, and updates the
+ * status badge + interpretation text once a prediction is received.
  */
 function renderPrediction(rawScore) {
   const score = Math.max(0, Math.min(SCORE_MAX, rawScore));
-  const band  = getScoreBand(score);
+  const band = getScoreBand(score);
+
+  // --- Fill the gauge ring ---
   const ratio = score / SCORE_MAX;
+  const offset = GAUGE_CIRCUMFERENCE * (1 - ratio);
+  gaugeProgress.style.stroke = band.color;
+  gaugeProgress.style.strokeDashoffset = offset;
+  gaugeProgress.style.color = band.color; // used by drop-shadow "breathing" glow
 
-  // --- Fill the arc ---
-  arcProgress.style.strokeDashoffset = ARC_LENGTH * (1 - ratio);
-
-  // --- Move the needle dot to the correct position on the arc ---
-  const pt = arcPoint(ratio);
-  arcNeedle.setAttribute("cx", pt.x);
-  arcNeedle.setAttribute("cy", pt.y);
-  arcNeedle.style.stroke = band.color;
-  arcNeedleInner.setAttribute("cx", pt.x);
-  arcNeedleInner.setAttribute("cy", pt.y);
-
-  // --- Animate the numeric counter (SVG text element) ---
+  // --- Animate the numeric counter from 0 to the final score ---
   animateCounter(scoreCounter, score);
-
-  // --- Update score text color to match band ---
-  scoreCounter.style.fill = band.color;
 
   // --- Update status badge ---
   statusBadge.textContent = band.label;
-  statusBadge.className   = `status-badge ${band.statusClass}`;
+  statusBadge.className = `status-badge ${band.statusClass}`;
 
   // --- Update interpretation copy ---
   interpretationText.textContent = band.message;
 
-  // --- Record prediction time ---
+  // --- Record prediction time in the meta card ---
   document.getElementById("predictionTime").textContent = new Date().toLocaleTimeString(
     undefined,
     { hour: "2-digit", minute: "2-digit" }
   );
 
-  // --- Pop animation ---
-  arcMeterCard.classList.remove("result-pop");
-  void arcMeterCard.offsetWidth;
-  arcMeterCard.classList.add("result-pop");
+  // --- Small "pop" animation to draw attention to the result ---
+  gaugeCard.classList.remove("result-pop");
+  void gaugeCard.offsetWidth; // force reflow so the animation can replay
+  gaugeCard.classList.add("result-pop");
 
-  // --- Highlight border ---
-  arcMeterCard.classList.add("has-result");
-
-  // --- Show the Try Again button ---
-  retestBtn.style.display = "inline-flex";
-
-  // --- Scroll into view ---
-  arcMeterCard.scrollIntoView({ behavior: "smooth", block: "center" });
-
-  // --- Show floating banner ---
-  showResultBanner(score, band);
+  // Scroll the dashboard into view on smaller screens where it isn't sticky.
+  if (window.innerWidth <= 1024) {
+    document.querySelector(".dashboard-column").scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
 }
-
-// -----------------------------------------------------
-// RETEST — reset arc meter and form back to blank state
-// -----------------------------------------------------
-retestBtn.addEventListener("click", () => {
-  // Reset arc
-  arcProgress.style.strokeDashoffset = ARC_LENGTH;
-  arcNeedle.setAttribute("cx", 24);
-  arcNeedle.setAttribute("cy", 148);
-  arcNeedle.style.stroke = "var(--sky-blue)";
-  arcNeedleInner.setAttribute("cx", 24);
-  arcNeedleInner.setAttribute("cy", 148);
-
-  // Reset score text
-  scoreCounter.textContent = "--";
-  scoreCounter.style.fill = "var(--text-primary)";
-
-  // Reset badge + message
-  statusBadge.textContent = "Awaiting input";
-  statusBadge.className = "status-badge status-idle";
-  interpretationText.innerHTML = 'Fill in the form and press <strong>Predict My Score</strong> to see your personalized mental wellness insight here.';
-
-  // Hide retest button, remove highlight
-  retestBtn.style.display = "none";
-  arcMeterCard.classList.remove("has-result", "result-pop");
-
-  // Reset prediction time
-  document.getElementById("predictionTime").textContent = "—";
-
-  // Clear form error
-  formError.textContent = "";
-
-  // Scroll to top of form and focus first field
-  document.getElementById("predictForm").scrollIntoView({ behavior: "smooth", block: "start" });
-  setTimeout(() => document.getElementById("age").focus(), 600);
-});
 
 /**
  * Counts up a number smoothly over ~900ms using requestAnimationFrame.
@@ -513,64 +380,4 @@ function animateCounter(el, target) {
   }
 
   requestAnimationFrame(step);
-}
-
-// -----------------------------------------------------
-// FLOATING RESULT BANNER
-// Shows a prominent score card that slides in from the
-// bottom so the result is impossible to miss.
-// -----------------------------------------------------
-
-let resultBannerEl = null;
-
-function showResultBanner(score, band) {
-  // Remove any existing banner first
-  if (resultBannerEl) {
-    resultBannerEl.remove();
-    resultBannerEl = null;
-  }
-
-  const banner = document.createElement("div");
-  banner.id = "resultBanner";
-  banner.setAttribute("role", "status");
-  banner.setAttribute("aria-live", "polite");
-  banner.innerHTML = `
-    <div class="result-banner-inner">
-      <div class="result-banner-score-wrap">
-        <span class="result-banner-score">${score.toFixed(1)}</span>
-        <span class="result-banner-max">&nbsp;/ 10</span>
-      </div>
-      <div class="result-banner-info">
-        <span class="result-banner-label" style="color:${band.color}">${band.label}</span>
-        <span class="result-banner-msg">${band.message}</span>
-      </div>
-      <button class="result-banner-close" aria-label="Dismiss result banner" title="Dismiss">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-        </svg>
-      </button>
-    </div>
-  `;
-
-  document.body.appendChild(banner);
-  resultBannerEl = banner;
-
-  // Trigger entrance animation
-  requestAnimationFrame(() => banner.classList.add("result-banner-visible"));
-
-  // Close button
-  banner.querySelector(".result-banner-close").addEventListener("click", () => {
-    banner.classList.remove("result-banner-visible");
-    setTimeout(() => banner.remove(), 400);
-    resultBannerEl = null;
-  });
-
-  // Auto-dismiss after 12 seconds
-  setTimeout(() => {
-    if (resultBannerEl === banner) {
-      banner.classList.remove("result-banner-visible");
-      setTimeout(() => banner.remove(), 400);
-      resultBannerEl = null;
-    }
-  }, 12000);
 }

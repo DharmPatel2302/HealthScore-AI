@@ -63,20 +63,14 @@ Students who want a quick, data-driven check on how their current routine (scree
 
 ### About Page
 ![About Page](public/screenshots/image-1.png)
-![About Page_2](public/screenshots/image-2.png)
-![About Page_3](public/screenshots/image-3.png)
 
-### Gallery Page
-![Gallery Page](public/screenshots/image-4.png)
-#### Gallery Page --> Apply Filter
-![Gallery Filter](public/screenshots/image-5.png)
-#### Gallery Page --> Download
-![Download Img](public/screenshots/image-6.png)
+### Prediction Form
+![Prediction Form](public/screenshots/image-2.png)
+### Prediction Result
+![Prediction Result](public/screenshots/image-3.png)
+### Light / Dark Theme Toggle
+![Light / Dark Theme Toggle](public/screenshots/image-4.png)
 
-### Prediction
-![Analysis of leaf](public/screenshots/image-7.png)
-![Micro_Interaction](public/screenshots/image-8.png)
-![Result](public/screenshots/image-9.png)
 
 
 
@@ -201,53 +195,16 @@ The **entire pipeline** is saved — not just the XGBoost model object — so th
 
 ## 📈 Model Evaluation
 
-> This is a **regression** task, so metrics and visuals are regression-appropriate (R², MAE, RMSE, residuals, feature importance) — not classification metrics like accuracy/precision/recall, confusion matrix, or ROC-AUC, which don't apply to a continuous target.
 
-### Full comparison (from the notebook's final results table)
+![Model_Eval](public/screenshots/image-5.png)
 
-| Model | Test R² | Training R² | MAE | RMSE |
-|---|---|---|---|---|
-| **XGBoost (Tuned)** ⭐ | **0.8901** | 0.9932 | **0.3278** | **0.4394** |
-| CatBoost (Tuned) | 0.8848 | 0.9703 | 0.3368 | 0.4499 |
-| Random Forest (Default) | 0.8776 | 0.9808 | 0.3472 | 0.4637 |
-| XGBoost (Default) | 0.8772 | 0.9752 | 0.3519 | 0.4645 |
-| Random Forest (Tuned) | 0.8650 | 0.9547 | 0.3689 | 0.4869 |
-| CatBoost (Default) | 0.8638 | 0.9331 | 0.3752 | 0.4891 |
-| Linear Regression | 0.7398 | 0.7237 | 0.5362 | 0.6760 |
+
 
 **How to read this:** the final XGBoost model explains **~89% of the variance** in students' mental health scores, and on average its predictions are off by only **±0.33 points** on a scale that runs roughly 3.6–9.4 — a practically small error for a wellness self-assessment tool.
 
 ---
 
-## 🔄 Working Flow
 
-Step-by-step, from a user's keystroke to a rendered result:
-
-```
-User fills the form (age, platform, sleep, stress, etc.)
-            ↓
-Browser-side HTML5 validation (required fields, min/max ranges)
-            ↓
-script.js builds a JSON payload and calls fetch('/predict')
-            ↓
-FastAPI receives POST /predict — Pydantic validates every field
-    (e.g. age 10–100, hours 0–24, enums restricted to known categories)
-            ↓
-main.py builds a single-row pandas DataFrame from the validated data,
-    computing Grouped_country from the raw Country value
-            ↓
-model.predict(input_row) — the saved Pipeline runs the FULL preprocessing
-    (impute → log-transform/scale → ordinal encode → one-hot encode)
-    and then the tuned XGBoost regressor, in one call
-            ↓
-FastAPI returns { "predicted_mental_health_score": 6.78 }
-            ↓
-script.js reads the score, computes a 0–10 ratio, and:
-    • animates the SVG arc gauge needle to that position
-    • counts the score number up from 0
-    • picks a status band (Excellent / Good / Moderate / Needs Attention / Poor)
-    • shows a floating result banner with a personalized interpretation
-```
 
 ---
 

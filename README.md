@@ -16,7 +16,6 @@
 [![Railway](https://img.shields.io/badge/Deployed%20on-Railway-0B0D0E?style=flat-square&logo=railway&logoColor=white)](https://railway.app/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](#-license)
 
-[Live Demo](#-demo) · [How It Works](#-project-architecture) · [API Docs](#-api-documentation) · [Installation](#-installation-guide)
 
 </div>
 
@@ -51,7 +50,7 @@ Students who want a quick, data-driven check on how their current routine (scree
 
 ---
 
-## 🖥️ Demo
+## Demo
 
 
 
@@ -76,7 +75,7 @@ Students who want a quick, data-driven check on how their current routine (scree
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Category | Technology | Purpose |
 |---|---|---|
@@ -97,7 +96,7 @@ Students who want a quick, data-driven check on how their current routine (scree
 
 ---
 
-## 🏗️ Project Architecture
+## Project Architecture
 
 The project is split into two lifecycles that share **one artifact**: the trained pipeline (`.pkl` file). Everything in `Training/` happens once, offline. Everything in `Backend/` + `Frontend/` happens live, on every user request.
 
@@ -124,7 +123,7 @@ flowchart TD
 
 
 
-## 📊 Dataset
+## Dataset
 
 | Property | Detail |
 |---|---|

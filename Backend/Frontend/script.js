@@ -1,21 +1,11 @@
 
-// // -----------------------------------------------------
-// // CONFIG
-// // -----------------------------------------------------
 // const API_URL = "/predict";
+
 // const SCORE_MAX = 10;
 
-// // --- Arc geometry (must match the SVG <path> in index.html) ---
-// // Path: M 24 148 A 116 116 0 0 1 256 148  → semicircle, radius 116, center (140,148)
-// const ARC_RADIUS = 116;
-// const ARC_CENTER_X = 140;
-// const ARC_CENTER_Y = 148;
-// // Length of a HALF circle (this arc), NOT a full circle:
-// const GAUGE_CIRCUMFERENCE = Math.PI * ARC_RADIUS; // ≈ 364.4
-
-// // Mini progress rings on the stat cards (these ARE full circles)
+// // Mini progress rings (Sleep / Study / Usage / Stress cards) — full circles.
 // const MINI_RING_RADIUS = 24;
-// const MINI_RING_CIRCUMFERENCE = 2 * Math.PI * MINI_RING_RADIUS; // ≈ 150.8
+// const MINI_RING_CIRCUMFERENCE = 2 * Math.PI * MINI_RING_RADIUS; // ~150.8
 
 // // -----------------------------------------------------
 // // THEME TOGGLE (Light / Dark)
@@ -49,40 +39,70 @@
 // });
 
 // // -----------------------------------------------------
-// // SLIDER INTERACTIONS
+// // SLIDER <-> NUMBER BUBBLE TWO-WAY SYNC
+// // Dragging the slider updates the number bubble; typing in the bubble
+// // (on blur / Enter) moves the slider. Both update dashboard stat + ring.
 // // -----------------------------------------------------
-// function setupSlider({ sliderId, bubbleId, formatFn, statId, ringId, ringMax }) {
+// function setupSlider({ sliderId, bubbleId, isCount = false, statId, ringId, ringMax }) {
 //   const slider = document.getElementById(sliderId);
 //   const bubble = document.getElementById(bubbleId);
-//   const stat = statId ? document.getElementById(statId) : null;
-//   const ring = ringId ? document.getElementById(ringId) : null;
+//   const stat   = statId ? document.getElementById(statId) : null;
+//   const ring   = ringId ? document.getElementById(ringId) : null;
+//   const decimals = isCount ? 0 : 1;
 
-//   function update() {
-//     const value = parseFloat(slider.value);
-//     const formatted = formatFn(value);
+//   function formatStat(v) {
+//     return isCount ? `${Math.round(v)}/day` : `${v.toFixed(1)} hrs`;
+//   }
 
-//     bubble.textContent = formatted;
-//     bubble.style.transform = "scale(1.12)";
-//     setTimeout(() => (bubble.style.transform = "scale(1)"), 120);
+//   function applyValue(value) {
+//     const min = parseFloat(slider.min);
+//     const max = parseFloat(slider.max);
+//     value = Math.min(Math.max(value, min), max);
 
-//     if (stat) stat.textContent = formatted;
+//     slider.value = value;
+//     bubble.value = isCount ? Math.round(value) : value.toFixed(decimals);
+
+//     if (stat) stat.textContent = formatStat(value);
 
 //     if (ring && ringMax) {
 //       const ratio = Math.min(value / ringMax, 1);
-//       const offset = MINI_RING_CIRCUMFERENCE * (1 - ratio);
 //       ring.style.strokeDasharray = MINI_RING_CIRCUMFERENCE;
-//       ring.style.strokeDashoffset = offset;
+//       ring.style.strokeDashoffset = MINI_RING_CIRCUMFERENCE * (1 - ratio);
 //     }
+
+//     return value;
 //   }
 
-//   slider.addEventListener("input", update);
-//   update();
+//   // Slider drag -> sync bubble
+//   slider.addEventListener("input", () => {
+//     applyValue(parseFloat(slider.value));
+//     bubble.style.transform = "scale(1.12)";
+//     setTimeout(() => (bubble.style.transform = "scale(1)"), 120);
+//   });
+
+//   // Typing in bubble -> sync slider (select all on focus so typing replaces, not appends)
+//   bubble.addEventListener("focus", () => bubble.select());
+//   bubble.addEventListener("change", () => {
+//     const v = parseFloat(bubble.value);
+//     if (!Number.isNaN(v)) applyValue(v);
+//   });
+//   bubble.addEventListener("keydown", (e) => {
+//     if (e.key === "Enter") {
+//       e.preventDefault();
+//       const v = parseFloat(bubble.value);
+//       if (!Number.isNaN(v)) applyValue(v);
+//       bubble.blur();
+//     }
+//   });
+//   // Prevent accidental value change while scrolling the page over the bubble
+//   bubble.addEventListener("wheel", (e) => e.preventDefault(), { passive: false });
+
+//   applyValue(parseFloat(slider.value)); // initialise on load
 // }
 
 // setupSlider({
 //   sliderId: "avg_daily_usage_hours",
 //   bubbleId: "usageValue",
-//   formatFn: (v) => `${v.toFixed(1)} hrs`,
 //   statId: "statUsage",
 //   ringId: "ringUsage",
 //   ringMax: 12,
@@ -91,13 +111,12 @@
 // setupSlider({
 //   sliderId: "daily_unlocks",
 //   bubbleId: "unlocksValue",
-//   formatFn: (v) => `${Math.round(v)}/day`,
+//   isCount: true,
 // });
 
 // setupSlider({
 //   sliderId: "study_hours",
 //   bubbleId: "studyValue",
-//   formatFn: (v) => `${v.toFixed(1)} hrs`,
 //   statId: "statStudy",
 //   ringId: "ringStudy",
 //   ringMax: 12,
@@ -106,7 +125,6 @@
 // setupSlider({
 //   sliderId: "sleep_hours_per_night",
 //   bubbleId: "sleepValue",
-//   formatFn: (v) => `${v.toFixed(1)} hrs`,
 //   statId: "statSleep",
 //   ringId: "ringSleep",
 //   ringMax: 10,
@@ -115,9 +133,9 @@
 // setupSlider({
 //   sliderId: "physical_activity_hours",
 //   bubbleId: "activityValue",
-//   formatFn: (v) => `${v.toFixed(1)} hrs`,
 // });
 
+// // Stress level select also drives its own dashboard card + ring.
 // const stressSelect = document.getElementById("stress_level");
 // const statStress = document.getElementById("statStress");
 // const ringStress = document.getElementById("ringStress");
@@ -228,19 +246,34 @@
 // }
 
 // // -----------------------------------------------------
-// // RENDER PREDICTION: arc fill, needle, counter, badge, copy
+// // RENDER PREDICTION: arc fill, needle, counter, badge, copy, retest button
 // // -----------------------------------------------------
-// const gaugeProgress = document.getElementById("arcProgress");
+// const arcProgress = document.getElementById("arcProgress");
 // const arcNeedle = document.getElementById("arcNeedle");
 // const arcNeedleInner = document.getElementById("arcNeedleInner");
 // const scoreCounter = document.getElementById("scoreCounter");
 // const statusBadge = document.getElementById("statusBadge");
 // const interpretationText = document.getElementById("interpretationText");
-// const gaugeCard = document.querySelector(".arc-meter-card");
+// const arcMeterCard = document.querySelector(".arc-meter-card");
+// const retestBtn = document.getElementById("retestBtn");
 
-// // Prepare the arc stroke for animation (starts empty).
-// gaugeProgress.style.strokeDasharray = GAUGE_CIRCUMFERENCE;
-// gaugeProgress.style.strokeDashoffset = GAUGE_CIRCUMFERENCE;
+// // Arc geometry — MUST match the SVG <path> in index.html:
+// // "M 24 148 A 116 116 0 0 1 256 148" → semicircle, radius 116, center (140,148)
+// const ARC_CX = 140, ARC_CY = 148, ARC_R = 116;
+// const ARC_LENGTH = Math.PI * ARC_R; // ≈ 364.4 — HALF circle, not full circle
+
+// arcProgress.style.strokeDasharray = ARC_LENGTH;
+// arcProgress.style.strokeDashoffset = ARC_LENGTH;
+
+// /** Point on the semicircle for a given 0..1 score ratio (0=left, 1=right). */
+// function arcPoint(ratio) {
+//   const angleDeg = 180 - ratio * 180;
+//   const angleRad = (angleDeg * Math.PI) / 180;
+//   return {
+//     x: ARC_CX + ARC_R * Math.cos(angleRad),
+//     y: ARC_CY - ARC_R * Math.sin(angleRad),
+//   };
+// }
 
 // function getScoreBand(score) {
 //   if (score >= 8) {
@@ -288,56 +321,44 @@
 //   };
 // }
 
-// /**
-//  * Given a 0..1 ratio along the semicircle (0 = left end, 1 = right end),
-//  * returns the {x, y} point on the arc — used to place the needle dot.
-//  */
-// function pointOnArc(ratio) {
-//   const theta = Math.PI * (1 - ratio); // π (180°) at ratio 0 → 0 at ratio 1
-//   const x = ARC_CENTER_X + ARC_RADIUS * Math.cos(theta);
-//   const y = ARC_CENTER_Y - ARC_RADIUS * Math.sin(theta);
-//   return { x, y };
-// }
-
 // function renderPrediction(rawScore) {
 //   const score = Math.max(0, Math.min(SCORE_MAX, rawScore));
 //   const band = getScoreBand(score);
 //   const ratio = score / SCORE_MAX;
 
 //   // --- Fill the arc ---
-//   const offset = GAUGE_CIRCUMFERENCE * (1 - ratio);
-//   gaugeProgress.style.stroke = band.color;
-//   gaugeProgress.style.strokeDashoffset = offset;
-//   gaugeProgress.style.color = band.color;
+//   arcProgress.style.strokeDashoffset = ARC_LENGTH * (1 - ratio);
 
 //   // --- Move the needle along the arc ---
-//   const { x, y } = pointOnArc(ratio);
-//   arcNeedle.setAttribute("cx", x);
-//   arcNeedle.setAttribute("cy", y);
-//   arcNeedleInner.setAttribute("cx", x);
-//   arcNeedleInner.setAttribute("cy", y);
+//   const pt = arcPoint(ratio);
+//   arcNeedle.setAttribute("cx", pt.x);
+//   arcNeedle.setAttribute("cy", pt.y);
 //   arcNeedle.style.fill = band.color;
+//   arcNeedleInner.setAttribute("cx", pt.x);
+//   arcNeedleInner.setAttribute("cy", pt.y);
 
 //   // --- Animate the numeric counter ---
 //   animateCounter(scoreCounter, score);
+//   scoreCounter.style.fill = band.color;
 
-//   // --- Update status badge ---
+//   // --- Status badge + interpretation ---
 //   statusBadge.textContent = band.label;
 //   statusBadge.className = `status-badge ${band.statusClass}`;
-
-//   // --- Update interpretation copy ---
 //   interpretationText.textContent = band.message;
 
-//   // --- Record prediction time ---
+//   // --- Prediction time ---
 //   document.getElementById("predictionTime").textContent = new Date().toLocaleTimeString(
 //     undefined,
 //     { hour: "2-digit", minute: "2-digit" }
 //   );
 
-//   // --- Small "pop" animation ---
-//   gaugeCard.classList.remove("result-pop");
-//   void gaugeCard.offsetWidth;
-//   gaugeCard.classList.add("result-pop");
+//   // --- Pop animation ---
+//   arcMeterCard.classList.remove("result-pop");
+//   void arcMeterCard.offsetWidth;
+//   arcMeterCard.classList.add("result-pop");
+
+//   // --- Show the Try Again button ---
+//   retestBtn.style.display = "inline-flex";
 
 //   if (window.innerWidth <= 1024) {
 //     document.querySelector(".dashboard-column").scrollIntoView({
@@ -346,6 +367,33 @@
 //     });
 //   }
 // }
+
+// // -----------------------------------------------------
+// // RETEST — reset arc meter + result panel back to idle state
+// // (Does NOT clear the form inputs, so the user can tweak values and re-run.)
+// // -----------------------------------------------------
+// retestBtn.addEventListener("click", () => {
+//   arcProgress.style.strokeDashoffset = ARC_LENGTH;
+
+//   arcNeedle.setAttribute("cx", 24);
+//   arcNeedle.setAttribute("cy", 148);
+//   arcNeedle.style.fill = "";
+//   arcNeedleInner.setAttribute("cx", 24);
+//   arcNeedleInner.setAttribute("cy", 148);
+
+//   scoreCounter.textContent = "--";
+//   scoreCounter.style.fill = "";
+
+//   statusBadge.textContent = "Awaiting input";
+//   statusBadge.className = "status-badge status-idle";
+//   interpretationText.innerHTML =
+//     'Fill in the form and press <strong>Predict My Score</strong> to see your personalized mental wellness insight here.';
+
+//   document.getElementById("predictionTime").textContent = "—";
+//   formError.textContent = "";
+
+//   retestBtn.style.display = "none";
+// });
 
 // function animateCounter(el, target) {
 //   const duration = 900;
@@ -370,11 +418,11 @@
 //   requestAnimationFrame(step);
 // }
 
-
 /* =====================================================
    MINDSCORE AI — SCRIPT.JS
    Handles: theme toggle, slider interactions, form validation,
-   API call to FastAPI backend, arc gauge + counter animation.
+   API call to FastAPI backend, arc gauge + counter animation,
+   scroll-to-result, and a floating result popup.
    ===================================================== */
 
 // -----------------------------------------------------
@@ -423,8 +471,6 @@ themeToggleBtn.addEventListener("click", () => {
 
 // -----------------------------------------------------
 // SLIDER <-> NUMBER BUBBLE TWO-WAY SYNC
-// Dragging the slider updates the number bubble; typing in the bubble
-// (on blur / Enter) moves the slider. Both update dashboard stat + ring.
 // -----------------------------------------------------
 function setupSlider({ sliderId, bubbleId, isCount = false, statId, ringId, ringMax }) {
   const slider = document.getElementById(sliderId);
@@ -456,14 +502,12 @@ function setupSlider({ sliderId, bubbleId, isCount = false, statId, ringId, ring
     return value;
   }
 
-  // Slider drag -> sync bubble
   slider.addEventListener("input", () => {
     applyValue(parseFloat(slider.value));
     bubble.style.transform = "scale(1.12)";
     setTimeout(() => (bubble.style.transform = "scale(1)"), 120);
   });
 
-  // Typing in bubble -> sync slider (select all on focus so typing replaces, not appends)
   bubble.addEventListener("focus", () => bubble.select());
   bubble.addEventListener("change", () => {
     const v = parseFloat(bubble.value);
@@ -477,10 +521,9 @@ function setupSlider({ sliderId, bubbleId, isCount = false, statId, ringId, ring
       bubble.blur();
     }
   });
-  // Prevent accidental value change while scrolling the page over the bubble
   bubble.addEventListener("wheel", (e) => e.preventDefault(), { passive: false });
 
-  applyValue(parseFloat(slider.value)); // initialise on load
+  applyValue(parseFloat(slider.value));
 }
 
 setupSlider({
@@ -518,7 +561,6 @@ setupSlider({
   bubbleId: "activityValue",
 });
 
-// Stress level select also drives its own dashboard card + ring.
 const stressSelect = document.getElementById("stress_level");
 const statStress = document.getElementById("statStress");
 const ringStress = document.getElementById("ringStress");
@@ -648,7 +690,6 @@ const ARC_LENGTH = Math.PI * ARC_R; // ≈ 364.4 — HALF circle, not full circl
 arcProgress.style.strokeDasharray = ARC_LENGTH;
 arcProgress.style.strokeDashoffset = ARC_LENGTH;
 
-/** Point on the semicircle for a given 0..1 score ratio (0=left, 1=right). */
 function arcPoint(ratio) {
   const angleDeg = 180 - ratio * 180;
   const angleRad = (angleDeg * Math.PI) / 180;
@@ -663,7 +704,7 @@ function getScoreBand(score) {
     return {
       label: "Excellent",
       statusClass: "status-excellent",
-      color: "var(--status-excellent)",
+      color: "#2FB88A",
       message:
         "Your lifestyle habits indicate excellent mental wellness. Continue maintaining balanced sleep, study and physical activity.",
     };
@@ -672,7 +713,7 @@ function getScoreBand(score) {
     return {
       label: "Good",
       statusClass: "status-good",
-      color: "var(--status-good)",
+      color: "#4A90D9",
       message:
         "Your habits reflect good mental wellness overall. A few small tweaks to sleep or screen time could push you even higher.",
     };
@@ -681,7 +722,7 @@ function getScoreBand(score) {
     return {
       label: "Moderate",
       statusClass: "status-moderate",
-      color: "var(--status-moderate)",
+      color: "#E8A33D",
       message:
         "Your lifestyle indicates moderate mental wellness. Small improvements in sleep and reduced social media usage may improve your score.",
     };
@@ -690,7 +731,7 @@ function getScoreBand(score) {
     return {
       label: "Needs Attention",
       statusClass: "status-attention",
-      color: "var(--status-attention)",
+      color: "#E8813D",
       message:
         "Your current routine shows signs that may affect your wellbeing. Prioritizing consistent sleep and lowering stress could help.",
     };
@@ -698,7 +739,7 @@ function getScoreBand(score) {
   return {
     label: "Poor",
     statusClass: "status-poor",
-    color: "var(--status-poor)",
+    color: "#E85D5D",
     message:
       "Your current habits may negatively impact mental wellness. Increasing sleep, reducing stress and maintaining regular physical activity are recommended.",
   };
@@ -743,17 +784,15 @@ function renderPrediction(rawScore) {
   // --- Show the Try Again button ---
   retestBtn.style.display = "inline-flex";
 
-  if (window.innerWidth <= 1024) {
-    document.querySelector(".dashboard-column").scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }
+  // --- Always scroll the result card into view (desktop + mobile) ---
+  arcMeterCard.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  // --- Floating popup with the score ---
+  showResultBanner(score, band);
 }
 
 // -----------------------------------------------------
 // RETEST — reset arc meter + result panel back to idle state
-// (Does NOT clear the form inputs, so the user can tweak values and re-run.)
 // -----------------------------------------------------
 retestBtn.addEventListener("click", () => {
   arcProgress.style.strokeDashoffset = ARC_LENGTH;
@@ -799,4 +838,81 @@ function animateCounter(el, target) {
   }
 
   requestAnimationFrame(step);
+}
+
+// -----------------------------------------------------
+// FLOATING RESULT POPUP
+// Self-contained: all styling is inline, so it doesn't depend on
+// anything in style.css and can't silently fail to render.
+// -----------------------------------------------------
+let resultBannerEl = null;
+
+function showResultBanner(score, band) {
+  if (resultBannerEl) {
+    resultBannerEl.remove();
+    resultBannerEl = null;
+  }
+
+  const banner = document.createElement("div");
+  banner.setAttribute("role", "status");
+  banner.setAttribute("aria-live", "polite");
+
+  Object.assign(banner.style, {
+    position: "fixed",
+    left: "24px",
+    bottom: "24px",
+    zIndex: "9999",
+    maxWidth: "420px",
+    display: "flex",
+    alignItems: "flex-start",
+    gap: "16px",
+    padding: "18px 20px",
+    borderRadius: "16px",
+    background: "#12161FEE",
+    border: "1px solid #2A2F3C",
+    boxShadow: "0 12px 32px rgba(0,0,0,0.45)",
+    backdropFilter: "blur(8px)",
+    fontFamily: "Inter, sans-serif",
+    color: "#F5F6F8",
+    transform: "translateY(24px)",
+    opacity: "0",
+    transition: "transform 0.35s ease, opacity 0.35s ease",
+  });
+
+  banner.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;min-width:64px;">
+      <span style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:${band.color};line-height:1;">${score.toFixed(1)}</span>
+      <span style="font-size:12px;color:#9AA1AF;margin-top:2px;">/ 10</span>
+    </div>
+    <div style="flex:1;">
+      <div style="font-weight:700;font-size:14px;color:${band.color};margin-bottom:4px;">${band.label}</div>
+      <div style="font-size:13px;line-height:1.4;color:#C7CBD4;">${band.message}</div>
+    </div>
+    <button aria-label="Dismiss" title="Dismiss" style="
+      background:none;border:none;cursor:pointer;color:#9AA1AF;
+      padding:2px;line-height:0;flex-shrink:0;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
+    </button>
+  `;
+
+  document.body.appendChild(banner);
+  resultBannerEl = banner;
+
+  requestAnimationFrame(() => {
+    banner.style.transform = "translateY(0)";
+    banner.style.opacity = "1";
+  });
+
+  function dismiss() {
+    if (!resultBannerEl) return;
+    banner.style.transform = "translateY(24px)";
+    banner.style.opacity = "0";
+    setTimeout(() => banner.remove(), 350);
+    resultBannerEl = null;
+  }
+
+  banner.querySelector("button").addEventListener("click", dismiss);
+  setTimeout(dismiss, 10000);
 }

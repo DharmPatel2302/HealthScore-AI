@@ -8,7 +8,7 @@
 // CONFIG
 // -----------------------------------------------------
 // Change this if your FastAPI server runs on a different host/port.
-const API_URL = "http://127.0.0.1:8000/predict";
+const API_URL = "/predict";
 
 // The model's score scale (0 = lowest wellness, 10 = highest wellness).
 // Adjust SCORE_MAX if your model outputs a different range.

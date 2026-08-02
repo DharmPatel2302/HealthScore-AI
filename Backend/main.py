@@ -4,7 +4,15 @@ from pydantic import BaseModel, Field
 from typing import Literal
 import pandas as pd
 from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
+
+BASE_DIR = Path(__file__).resolve().parent
+
+model = joblib.load(BASE_DIR / "xgboost_tuned_pipeline.pkl")
 
 class StudentData(BaseModel):
     age                     : int = Field(..., ge=10, le=100)
@@ -24,9 +32,14 @@ class StudentData(BaseModel):
 class PredictionResponse(BaseModel):
     predicted_mental_health_score:float
     #6.777777 -> float
-
-model=joblib.load("xgboost_tuned_pipeline.pkl")
 app = FastAPI()
+BASE_DIR = Path(__file__).resolve().parent
+
+app.mount(
+    "/static",
+    StaticFiles(directory=BASE_DIR / "Frontend"),
+    name="static"
+)
 top_countries = ['Other','India','USA','Canada','Australia','UK','Germany','Mexico','Turkey','France']
 
 app.add_middleware(
@@ -38,9 +51,8 @@ app.add_middleware(
 )
 
 @app.get("/")
-def read_root():
-    return {"Welcome to the API": "This API is designed to predict the Mental Health Status of an individual based on their responses to a set of questions...."}
-
+def home():
+    return FileResponse(BASE_DIR / "Frontend" / "index.html")
 
 @app.post("/predict", response_model=PredictionResponse)
 def predict_mental_health(data: StudentData):

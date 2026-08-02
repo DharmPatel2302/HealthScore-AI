@@ -10,10 +10,6 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 
-BASE_DIR = Path(__file__).resolve().parent
-
-model = joblib.load(BASE_DIR / "xgboost_tuned_pipeline.pkl")
-
 class StudentData(BaseModel):
     age                     : int = Field(..., ge=10, le=100)
     gender                  : Literal['Male', 'Female']
@@ -32,12 +28,15 @@ class StudentData(BaseModel):
 class PredictionResponse(BaseModel):
     predicted_mental_health_score:float
     #6.777777 -> float
+
+
 app = FastAPI()
 BASE_DIR = Path(__file__).resolve().parent
+model = joblib.load(BASE_DIR / "Backend" / "xgboost_tuned_pipeline.pkl")
 
 app.mount(
     "/static",
-    StaticFiles(directory=BASE_DIR / "Frontend"),
+    StaticFiles(directory=BASE_DIR / "Backend" / "Frontend"),
     name="static"
 )
 top_countries = ['Other','India','USA','Canada','Australia','UK','Germany','Mexico','Turkey','France']
@@ -52,7 +51,7 @@ app.add_middleware(
 
 @app.get("/")
 def home():
-    return FileResponse(BASE_DIR / "Frontend" / "index.html")
+    return FileResponse(BASE_DIR / "Backend" / "Frontend" / "index.html")
 
 @app.post("/predict", response_model=PredictionResponse)
 def predict_mental_health(data: StudentData):

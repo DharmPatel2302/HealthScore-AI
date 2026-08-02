@@ -1,24 +1,21 @@
-// /* =====================================================
-//    MINDSCORE AI — SCRIPT.JS
-//    Handles: theme toggle, slider interactions, form validation,
-//    API call to FastAPI backend, gauge + counter animation.
-//    ===================================================== */
 
 // // -----------------------------------------------------
 // // CONFIG
 // // -----------------------------------------------------
-// // Change this if your FastAPI server runs on a different host/port.
 // const API_URL = "/predict";
-
-// // The model's score scale (0 = lowest wellness, 10 = highest wellness).
-// // Adjust SCORE_MAX if your model outputs a different range.
 // const SCORE_MAX = 10;
 
-// // Circle math constants used for the SVG gauge & mini rings.
-// const GAUGE_RADIUS = 92;
-// const GAUGE_CIRCUMFERENCE = 2 * Math.PI * GAUGE_RADIUS; // ~578
+// // --- Arc geometry (must match the SVG <path> in index.html) ---
+// // Path: M 24 148 A 116 116 0 0 1 256 148  → semicircle, radius 116, center (140,148)
+// const ARC_RADIUS = 116;
+// const ARC_CENTER_X = 140;
+// const ARC_CENTER_Y = 148;
+// // Length of a HALF circle (this arc), NOT a full circle:
+// const GAUGE_CIRCUMFERENCE = Math.PI * ARC_RADIUS; // ≈ 364.4
+
+// // Mini progress rings on the stat cards (these ARE full circles)
 // const MINI_RING_RADIUS = 24;
-// const MINI_RING_CIRCUMFERENCE = 2 * Math.PI * MINI_RING_RADIUS; // ~151
+// const MINI_RING_CIRCUMFERENCE = 2 * Math.PI * MINI_RING_RADIUS; // ≈ 150.8
 
 // // -----------------------------------------------------
 // // THEME TOGGLE (Light / Dark)
@@ -29,7 +26,6 @@
 
 // function applyTheme(theme) {
 //   document.documentElement.setAttribute("data-theme", theme);
-//   // Swap the sun/moon icon to reflect the CURRENT theme.
 //   if (theme === "dark") {
 //     iconSun.style.display = "none";
 //     iconMoon.style.display = "block";
@@ -39,7 +35,6 @@
 //   }
 // }
 
-// // Restore theme choice; default to the user's OS preference on first visit.
 // const savedTheme =
 //   window.__mindscoreTheme ||
 //   (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
@@ -55,15 +50,7 @@
 
 // // -----------------------------------------------------
 // // SLIDER INTERACTIONS
-// // Each slider updates its own value bubble AND the matching
-// // summary card on the right-hand dashboard, live as the user drags.
 // // -----------------------------------------------------
-
-// /**
-//  * Wires up a range input so that moving it:
-//  *  1. Updates a small text bubble showing the current value.
-//  *  2. Optionally updates a dashboard stat + mini progress ring.
-//  */
 // function setupSlider({ sliderId, bubbleId, formatFn, statId, ringId, ringMax }) {
 //   const slider = document.getElementById(sliderId);
 //   const bubble = document.getElementById(bubbleId);
@@ -75,7 +62,6 @@
 //     const formatted = formatFn(value);
 
 //     bubble.textContent = formatted;
-//     // tiny "pop" animation on the bubble for tactile feedback
 //     bubble.style.transform = "scale(1.12)";
 //     setTimeout(() => (bubble.style.transform = "scale(1)"), 120);
 
@@ -84,12 +70,13 @@
 //     if (ring && ringMax) {
 //       const ratio = Math.min(value / ringMax, 1);
 //       const offset = MINI_RING_CIRCUMFERENCE * (1 - ratio);
+//       ring.style.strokeDasharray = MINI_RING_CIRCUMFERENCE;
 //       ring.style.strokeDashoffset = offset;
 //     }
 //   }
 
 //   slider.addEventListener("input", update);
-//   update(); // initialize on page load
+//   update();
 // }
 
 // setupSlider({
@@ -131,7 +118,6 @@
 //   formatFn: (v) => `${v.toFixed(1)} hrs`,
 // });
 
-// // Stress level select also drives its own dashboard card + ring.
 // const stressSelect = document.getElementById("stress_level");
 // const statStress = document.getElementById("statStress");
 // const ringStress = document.getElementById("ringStress");
@@ -142,11 +128,12 @@
 //   if (!level) return;
 //   statStress.textContent = level;
 //   const ratio = stressLevelToRatio[level] ?? 0.5;
+//   ringStress.style.strokeDasharray = MINI_RING_CIRCUMFERENCE;
 //   ringStress.style.strokeDashoffset = MINI_RING_CIRCUMFERENCE * (1 - ratio);
 // });
 
 // // -----------------------------------------------------
-// // TODAY'S DATE (shown in the meta card)
+// // TODAY'S DATE
 // // -----------------------------------------------------
 // const todayDateEl = document.getElementById("todayDate");
 // todayDateEl.textContent = new Date().toLocaleDateString(undefined, {
@@ -184,13 +171,11 @@
 //   e.preventDefault();
 //   formError.textContent = "";
 
-//   // Basic HTML5 validation check before calling the API.
 //   if (!predictForm.checkValidity()) {
 //     predictForm.reportValidity();
 //     return;
 //   }
 
-//   // Build the JSON payload expected by the /predict endpoint.
 //   const payload = {
 //     age: Number(document.getElementById("age").value),
 //     gender: document.getElementById("gender").value,
@@ -220,8 +205,6 @@
 //     }
 
 //     const data = await response.json();
-
-//     // The FastAPI backend returns { "predicted_mental_health_score": number }
 //     const score = data.predicted_mental_health_score;
 
 //     if (typeof score !== "number" || Number.isNaN(score)) {
@@ -239,44 +222,26 @@
 //   }
 // });
 
-// /**
-//  * Toggles the button's loading/disabled visual state.
-//  */
 // function setLoadingState(isLoading) {
 //   predictBtn.disabled = isLoading;
 //   predictBtn.classList.toggle("loading", isLoading);
 // }
 
 // // -----------------------------------------------------
-// // RENDER PREDICTION: gauge fill, animated counter, badge, copy
+// // RENDER PREDICTION: arc fill, needle, counter, badge, copy
 // // -----------------------------------------------------
-// // const gaugeProgress = document.getElementById("gaugeProgress");
-// // const gaugeProgress = document.getElementById("arcProgress");
-// // const scoreCounter = document.getElementById("scoreCounter");
-// // const statusBadge = document.getElementById("statusBadge");
-// // const interpretationText = document.getElementById("interpretationText");
-// // // const gaugeCard = document.querySelector(".gauge-card");
-// // const gaugeCard = document.querySelector(".arc-meter-card");
-
 // const gaugeProgress = document.getElementById("arcProgress");
 // const arcNeedle = document.getElementById("arcNeedle");
 // const arcNeedleInner = document.getElementById("arcNeedleInner");
-
 // const scoreCounter = document.getElementById("scoreCounter");
 // const statusBadge = document.getElementById("statusBadge");
 // const interpretationText = document.getElementById("interpretationText");
-
 // const gaugeCard = document.querySelector(".arc-meter-card");
 
-
-// // Prepare the gauge circle stroke for animation (starts empty).
+// // Prepare the arc stroke for animation (starts empty).
 // gaugeProgress.style.strokeDasharray = GAUGE_CIRCUMFERENCE;
 // gaugeProgress.style.strokeDashoffset = GAUGE_CIRCUMFERENCE;
 
-// /**
-//  * Maps a 0-10 score to a status label, CSS class, color and message,
-//  * matching the 5-tier system from the design brief.
-//  */
 // function getScoreBand(score) {
 //   if (score >= 8) {
 //     return {
@@ -324,21 +289,36 @@
 // }
 
 // /**
-//  * Animates the gauge ring, the numeric counter, and updates the
-//  * status badge + interpretation text once a prediction is received.
+//  * Given a 0..1 ratio along the semicircle (0 = left end, 1 = right end),
+//  * returns the {x, y} point on the arc — used to place the needle dot.
 //  */
+// function pointOnArc(ratio) {
+//   const theta = Math.PI * (1 - ratio); // π (180°) at ratio 0 → 0 at ratio 1
+//   const x = ARC_CENTER_X + ARC_RADIUS * Math.cos(theta);
+//   const y = ARC_CENTER_Y - ARC_RADIUS * Math.sin(theta);
+//   return { x, y };
+// }
+
 // function renderPrediction(rawScore) {
 //   const score = Math.max(0, Math.min(SCORE_MAX, rawScore));
 //   const band = getScoreBand(score);
-
-//   // --- Fill the gauge ring ---
 //   const ratio = score / SCORE_MAX;
+
+//   // --- Fill the arc ---
 //   const offset = GAUGE_CIRCUMFERENCE * (1 - ratio);
 //   gaugeProgress.style.stroke = band.color;
 //   gaugeProgress.style.strokeDashoffset = offset;
-//   gaugeProgress.style.color = band.color; // used by drop-shadow "breathing" glow
+//   gaugeProgress.style.color = band.color;
 
-//   // --- Animate the numeric counter from 0 to the final score ---
+//   // --- Move the needle along the arc ---
+//   const { x, y } = pointOnArc(ratio);
+//   arcNeedle.setAttribute("cx", x);
+//   arcNeedle.setAttribute("cy", y);
+//   arcNeedleInner.setAttribute("cx", x);
+//   arcNeedleInner.setAttribute("cy", y);
+//   arcNeedle.style.fill = band.color;
+
+//   // --- Animate the numeric counter ---
 //   animateCounter(scoreCounter, score);
 
 //   // --- Update status badge ---
@@ -348,18 +328,17 @@
 //   // --- Update interpretation copy ---
 //   interpretationText.textContent = band.message;
 
-//   // --- Record prediction time in the meta card ---
+//   // --- Record prediction time ---
 //   document.getElementById("predictionTime").textContent = new Date().toLocaleTimeString(
 //     undefined,
 //     { hour: "2-digit", minute: "2-digit" }
 //   );
 
-//   // --- Small "pop" animation to draw attention to the result ---
+//   // --- Small "pop" animation ---
 //   gaugeCard.classList.remove("result-pop");
-//   void gaugeCard.offsetWidth; // force reflow so the animation can replay
+//   void gaugeCard.offsetWidth;
 //   gaugeCard.classList.add("result-pop");
 
-//   // Scroll the dashboard into view on smaller screens where it isn't sticky.
 //   if (window.innerWidth <= 1024) {
 //     document.querySelector(".dashboard-column").scrollIntoView({
 //       behavior: "smooth",
@@ -368,9 +347,6 @@
 //   }
 // }
 
-// /**
-//  * Counts up a number smoothly over ~900ms using requestAnimationFrame.
-//  */
 // function animateCounter(el, target) {
 //   const duration = 900;
 //   const start = performance.now();
@@ -379,7 +355,6 @@
 //   function step(now) {
 //     const elapsed = now - start;
 //     const progress = Math.min(elapsed / duration, 1);
-//     // ease-out for a natural deceleration
 //     const eased = 1 - Math.pow(1 - progress, 3);
 //     const current = startValue + (target - startValue) * eased;
 
@@ -396,30 +371,24 @@
 // }
 
 
-
 /* =====================================================
    MINDSCORE AI — SCRIPT.JS
    Handles: theme toggle, slider interactions, form validation,
-   API call to FastAPI backend, gauge + counter animation.
+   API call to FastAPI backend, arc gauge + counter animation.
    ===================================================== */
 
 // -----------------------------------------------------
 // CONFIG
 // -----------------------------------------------------
+// Relative path — works both locally (same-origin dev server) and on Railway.
+// Do NOT hardcode http://127.0.0.1:8000 here, it will break in production.
 const API_URL = "/predict";
+
 const SCORE_MAX = 10;
 
-// --- Arc geometry (must match the SVG <path> in index.html) ---
-// Path: M 24 148 A 116 116 0 0 1 256 148  → semicircle, radius 116, center (140,148)
-const ARC_RADIUS = 116;
-const ARC_CENTER_X = 140;
-const ARC_CENTER_Y = 148;
-// Length of a HALF circle (this arc), NOT a full circle:
-const GAUGE_CIRCUMFERENCE = Math.PI * ARC_RADIUS; // ≈ 364.4
-
-// Mini progress rings on the stat cards (these ARE full circles)
+// Mini progress rings (Sleep / Study / Usage / Stress cards) — full circles.
 const MINI_RING_RADIUS = 24;
-const MINI_RING_CIRCUMFERENCE = 2 * Math.PI * MINI_RING_RADIUS; // ≈ 150.8
+const MINI_RING_CIRCUMFERENCE = 2 * Math.PI * MINI_RING_RADIUS; // ~150.8
 
 // -----------------------------------------------------
 // THEME TOGGLE (Light / Dark)
@@ -453,40 +422,70 @@ themeToggleBtn.addEventListener("click", () => {
 });
 
 // -----------------------------------------------------
-// SLIDER INTERACTIONS
+// SLIDER <-> NUMBER BUBBLE TWO-WAY SYNC
+// Dragging the slider updates the number bubble; typing in the bubble
+// (on blur / Enter) moves the slider. Both update dashboard stat + ring.
 // -----------------------------------------------------
-function setupSlider({ sliderId, bubbleId, formatFn, statId, ringId, ringMax }) {
+function setupSlider({ sliderId, bubbleId, isCount = false, statId, ringId, ringMax }) {
   const slider = document.getElementById(sliderId);
   const bubble = document.getElementById(bubbleId);
-  const stat = statId ? document.getElementById(statId) : null;
-  const ring = ringId ? document.getElementById(ringId) : null;
+  const stat   = statId ? document.getElementById(statId) : null;
+  const ring   = ringId ? document.getElementById(ringId) : null;
+  const decimals = isCount ? 0 : 1;
 
-  function update() {
-    const value = parseFloat(slider.value);
-    const formatted = formatFn(value);
+  function formatStat(v) {
+    return isCount ? `${Math.round(v)}/day` : `${v.toFixed(1)} hrs`;
+  }
 
-    bubble.textContent = formatted;
-    bubble.style.transform = "scale(1.12)";
-    setTimeout(() => (bubble.style.transform = "scale(1)"), 120);
+  function applyValue(value) {
+    const min = parseFloat(slider.min);
+    const max = parseFloat(slider.max);
+    value = Math.min(Math.max(value, min), max);
 
-    if (stat) stat.textContent = formatted;
+    slider.value = value;
+    bubble.value = isCount ? Math.round(value) : value.toFixed(decimals);
+
+    if (stat) stat.textContent = formatStat(value);
 
     if (ring && ringMax) {
       const ratio = Math.min(value / ringMax, 1);
-      const offset = MINI_RING_CIRCUMFERENCE * (1 - ratio);
       ring.style.strokeDasharray = MINI_RING_CIRCUMFERENCE;
-      ring.style.strokeDashoffset = offset;
+      ring.style.strokeDashoffset = MINI_RING_CIRCUMFERENCE * (1 - ratio);
     }
+
+    return value;
   }
 
-  slider.addEventListener("input", update);
-  update();
+  // Slider drag -> sync bubble
+  slider.addEventListener("input", () => {
+    applyValue(parseFloat(slider.value));
+    bubble.style.transform = "scale(1.12)";
+    setTimeout(() => (bubble.style.transform = "scale(1)"), 120);
+  });
+
+  // Typing in bubble -> sync slider (select all on focus so typing replaces, not appends)
+  bubble.addEventListener("focus", () => bubble.select());
+  bubble.addEventListener("change", () => {
+    const v = parseFloat(bubble.value);
+    if (!Number.isNaN(v)) applyValue(v);
+  });
+  bubble.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const v = parseFloat(bubble.value);
+      if (!Number.isNaN(v)) applyValue(v);
+      bubble.blur();
+    }
+  });
+  // Prevent accidental value change while scrolling the page over the bubble
+  bubble.addEventListener("wheel", (e) => e.preventDefault(), { passive: false });
+
+  applyValue(parseFloat(slider.value)); // initialise on load
 }
 
 setupSlider({
   sliderId: "avg_daily_usage_hours",
   bubbleId: "usageValue",
-  formatFn: (v) => `${v.toFixed(1)} hrs`,
   statId: "statUsage",
   ringId: "ringUsage",
   ringMax: 12,
@@ -495,13 +494,12 @@ setupSlider({
 setupSlider({
   sliderId: "daily_unlocks",
   bubbleId: "unlocksValue",
-  formatFn: (v) => `${Math.round(v)}/day`,
+  isCount: true,
 });
 
 setupSlider({
   sliderId: "study_hours",
   bubbleId: "studyValue",
-  formatFn: (v) => `${v.toFixed(1)} hrs`,
   statId: "statStudy",
   ringId: "ringStudy",
   ringMax: 12,
@@ -510,7 +508,6 @@ setupSlider({
 setupSlider({
   sliderId: "sleep_hours_per_night",
   bubbleId: "sleepValue",
-  formatFn: (v) => `${v.toFixed(1)} hrs`,
   statId: "statSleep",
   ringId: "ringSleep",
   ringMax: 10,
@@ -519,9 +516,9 @@ setupSlider({
 setupSlider({
   sliderId: "physical_activity_hours",
   bubbleId: "activityValue",
-  formatFn: (v) => `${v.toFixed(1)} hrs`,
 });
 
+// Stress level select also drives its own dashboard card + ring.
 const stressSelect = document.getElementById("stress_level");
 const statStress = document.getElementById("statStress");
 const ringStress = document.getElementById("ringStress");
@@ -632,19 +629,34 @@ function setLoadingState(isLoading) {
 }
 
 // -----------------------------------------------------
-// RENDER PREDICTION: arc fill, needle, counter, badge, copy
+// RENDER PREDICTION: arc fill, needle, counter, badge, copy, retest button
 // -----------------------------------------------------
-const gaugeProgress = document.getElementById("arcProgress");
+const arcProgress = document.getElementById("arcProgress");
 const arcNeedle = document.getElementById("arcNeedle");
 const arcNeedleInner = document.getElementById("arcNeedleInner");
 const scoreCounter = document.getElementById("scoreCounter");
 const statusBadge = document.getElementById("statusBadge");
 const interpretationText = document.getElementById("interpretationText");
-const gaugeCard = document.querySelector(".arc-meter-card");
+const arcMeterCard = document.querySelector(".arc-meter-card");
+const retestBtn = document.getElementById("retestBtn");
 
-// Prepare the arc stroke for animation (starts empty).
-gaugeProgress.style.strokeDasharray = GAUGE_CIRCUMFERENCE;
-gaugeProgress.style.strokeDashoffset = GAUGE_CIRCUMFERENCE;
+// Arc geometry — MUST match the SVG <path> in index.html:
+// "M 24 148 A 116 116 0 0 1 256 148" → semicircle, radius 116, center (140,148)
+const ARC_CX = 140, ARC_CY = 148, ARC_R = 116;
+const ARC_LENGTH = Math.PI * ARC_R; // ≈ 364.4 — HALF circle, not full circle
+
+arcProgress.style.strokeDasharray = ARC_LENGTH;
+arcProgress.style.strokeDashoffset = ARC_LENGTH;
+
+/** Point on the semicircle for a given 0..1 score ratio (0=left, 1=right). */
+function arcPoint(ratio) {
+  const angleDeg = 180 - ratio * 180;
+  const angleRad = (angleDeg * Math.PI) / 180;
+  return {
+    x: ARC_CX + ARC_R * Math.cos(angleRad),
+    y: ARC_CY - ARC_R * Math.sin(angleRad),
+  };
+}
 
 function getScoreBand(score) {
   if (score >= 8) {
@@ -692,56 +704,44 @@ function getScoreBand(score) {
   };
 }
 
-/**
- * Given a 0..1 ratio along the semicircle (0 = left end, 1 = right end),
- * returns the {x, y} point on the arc — used to place the needle dot.
- */
-function pointOnArc(ratio) {
-  const theta = Math.PI * (1 - ratio); // π (180°) at ratio 0 → 0 at ratio 1
-  const x = ARC_CENTER_X + ARC_RADIUS * Math.cos(theta);
-  const y = ARC_CENTER_Y - ARC_RADIUS * Math.sin(theta);
-  return { x, y };
-}
-
 function renderPrediction(rawScore) {
   const score = Math.max(0, Math.min(SCORE_MAX, rawScore));
   const band = getScoreBand(score);
   const ratio = score / SCORE_MAX;
 
   // --- Fill the arc ---
-  const offset = GAUGE_CIRCUMFERENCE * (1 - ratio);
-  gaugeProgress.style.stroke = band.color;
-  gaugeProgress.style.strokeDashoffset = offset;
-  gaugeProgress.style.color = band.color;
+  arcProgress.style.strokeDashoffset = ARC_LENGTH * (1 - ratio);
 
   // --- Move the needle along the arc ---
-  const { x, y } = pointOnArc(ratio);
-  arcNeedle.setAttribute("cx", x);
-  arcNeedle.setAttribute("cy", y);
-  arcNeedleInner.setAttribute("cx", x);
-  arcNeedleInner.setAttribute("cy", y);
+  const pt = arcPoint(ratio);
+  arcNeedle.setAttribute("cx", pt.x);
+  arcNeedle.setAttribute("cy", pt.y);
   arcNeedle.style.fill = band.color;
+  arcNeedleInner.setAttribute("cx", pt.x);
+  arcNeedleInner.setAttribute("cy", pt.y);
 
   // --- Animate the numeric counter ---
   animateCounter(scoreCounter, score);
+  scoreCounter.style.fill = band.color;
 
-  // --- Update status badge ---
+  // --- Status badge + interpretation ---
   statusBadge.textContent = band.label;
   statusBadge.className = `status-badge ${band.statusClass}`;
-
-  // --- Update interpretation copy ---
   interpretationText.textContent = band.message;
 
-  // --- Record prediction time ---
+  // --- Prediction time ---
   document.getElementById("predictionTime").textContent = new Date().toLocaleTimeString(
     undefined,
     { hour: "2-digit", minute: "2-digit" }
   );
 
-  // --- Small "pop" animation ---
-  gaugeCard.classList.remove("result-pop");
-  void gaugeCard.offsetWidth;
-  gaugeCard.classList.add("result-pop");
+  // --- Pop animation ---
+  arcMeterCard.classList.remove("result-pop");
+  void arcMeterCard.offsetWidth;
+  arcMeterCard.classList.add("result-pop");
+
+  // --- Show the Try Again button ---
+  retestBtn.style.display = "inline-flex";
 
   if (window.innerWidth <= 1024) {
     document.querySelector(".dashboard-column").scrollIntoView({
@@ -750,6 +750,33 @@ function renderPrediction(rawScore) {
     });
   }
 }
+
+// -----------------------------------------------------
+// RETEST — reset arc meter + result panel back to idle state
+// (Does NOT clear the form inputs, so the user can tweak values and re-run.)
+// -----------------------------------------------------
+retestBtn.addEventListener("click", () => {
+  arcProgress.style.strokeDashoffset = ARC_LENGTH;
+
+  arcNeedle.setAttribute("cx", 24);
+  arcNeedle.setAttribute("cy", 148);
+  arcNeedle.style.fill = "";
+  arcNeedleInner.setAttribute("cx", 24);
+  arcNeedleInner.setAttribute("cy", 148);
+
+  scoreCounter.textContent = "--";
+  scoreCounter.style.fill = "";
+
+  statusBadge.textContent = "Awaiting input";
+  statusBadge.className = "status-badge status-idle";
+  interpretationText.innerHTML =
+    'Fill in the form and press <strong>Predict My Score</strong> to see your personalized mental wellness insight here.';
+
+  document.getElementById("predictionTime").textContent = "—";
+  formError.textContent = "";
+
+  retestBtn.style.display = "none";
+});
 
 function animateCounter(el, target) {
   const duration = 900;

@@ -24,7 +24,7 @@
 
 ## 📋 Table of Contents
 
-- [Project Overview](#-project-overview)
+- [🎯 Project Overview](#-project-overview)
 - [Demo](#-demo)
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)

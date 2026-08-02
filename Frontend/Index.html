@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HealthScore AI — AI-Powered Mental Health Score Prediction</title>
+
+  <!-- Google Fonts: Sora for headings, Inter for body, Space Grotesk for numeric data -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============================================= -->
+  <!-- FLOATING BACKGROUND SHAPES (purely decorative) -->
+  <!-- ============================================= -->
+  <div class="bg-shapes" aria-hidden="true">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+  </div>
+
+  <!-- ============================================= -->
+  <!-- NAVIGATION BAR -->
+  <!-- ============================================= -->
+  <header class="navbar">
+    <div class="navbar-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <!-- simple pulse/heartbeat icon representing "mind score" -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M3 12h4l2 7 4-14 2 7h6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span class="brand-name">HealthScore <span class="brand-accent">AI</span></span>
+      </div>
+
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#predict">Prediction</a>
+        <a href="#about">About</a>
+      </nav>
+
+      <div class="navbar-actions">
+        <!-- Theme toggle button, handled in script.js -->
+        <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark and light theme" title="Toggle theme">
+          <svg id="iconSun" width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <svg id="iconMoon" width="18" height="18" viewBox="0 0 24 24" fill="none" style="display:none;">
+            <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <a href="#predict" class="btn btn-primary btn-small">Start Prediction</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================= -->
+  <!-- HERO SECTION -->
+  <!-- ============================================= -->
+  <section class="hero" id="top">
+    <div class="hero-inner">
+      <div class="hero-copy fade-in-up">
+        <span class="eyebrow">Powered by XGBoost · Real‑time Inference</span>
+        <h1 class="hero-title">
+          AI‑Powered <span class="text-gradient">Mental Health</span> Score Prediction
+        </h1>
+        <p class="hero-subtitle">
+          Predict your mental wellness using Machine Learning based on your digital
+          lifestyle, academic routine, sleep quality and daily habits.
+        </p>
+        <div class="hero-actions">
+          <a href="#predict" class="btn btn-primary btn-large">
+            Start Prediction
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a href="#features" class="btn btn-ghost btn-large">Learn More</a>
+        </div>
+
+        <div class="hero-trust">
+         
+          <div class="trust-divider"></div>
+          <div class="trust-item">
+            <span class="trust-number">90%</span>
+            <span class="trust-label">Model confidence</span>
+          </div>
+          
+        </div>
+      </div>
+
+      <div class="hero-illustration fade-in-up delay-2" aria-hidden="true">
+        <!-- Healthcare-inspired SVG illustration: breathing rings + pulse line -->
+        <svg viewBox="0 0 420 420" width="100%" height="100%">
+          <defs>
+            <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#4A90D9"/>
+              <stop offset="100%" stop-color="#2FB88A"/>
+            </linearGradient>
+            <linearGradient id="ringGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#9B8FD9"/>
+              <stop offset="100%" stop-color="#4A90D9"/>
+            </linearGradient>
+          </defs>
+
+          <circle class="illustration-ring ring-breathe-slow" cx="210" cy="210" r="170" fill="none" stroke="url(#ringGradient)" stroke-width="1.4" opacity="0.35"/>
+          <circle class="illustration-ring ring-breathe" cx="210" cy="210" r="130" fill="none" stroke="url(#ringGradient2)" stroke-width="2" opacity="0.5"/>
+          <circle cx="210" cy="210" r="92" fill="url(#ringGradient)" opacity="0.12"/>
+          <circle class="illustration-core" cx="210" cy="210" r="70" fill="url(#ringGradient)" opacity="0.9"/>
+
+          <!-- pulse / heartbeat line across the core -->
+          <polyline points="150,210 178,210 190,180 202,240 214,196 226,210 270,210"
+            fill="none" stroke="#FAFBFC" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" class="pulse-line"/>
+
+          <!-- floating dots representing data points -->
+          <circle class="float-dot dot-a" cx="80" cy="120" r="6" fill="#2FB88A"/>
+          <circle class="float-dot dot-b" cx="345" cy="95" r="5" fill="#9B8FD9"/>
+          <circle class="float-dot dot-c" cx="365" cy="300" r="7" fill="#4A90D9"/>
+          <circle class="float-dot dot-d" cx="60" cy="310" r="5" fill="#E8A33D"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================= -->
+  <!-- FEATURE CARDS -->
+  <!-- ============================================= -->
+  <section class="features" id="features">
+    <div class="section-inner">
+      <div class="features-grid">
+
+        <div class="feature-card fade-in-up">
+          <div class="feature-icon icon-blue">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/></svg>
+          </div>
+          <h3>AI Powered</h3>
+          <p>Trained on real behavioral data with a tuned XGBoost model for accurate, explainable wellness scoring.</p>
+        </div>
+
+        <div class="feature-card fade-in-up delay-1">
+          <div class="feature-icon icon-green">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>Fast Prediction</h3>
+          <p>Get your mental wellness score in under a second — no waiting, no friction, instant insight.</p>
+        </div>
+
+        <div class="feature-card fade-in-up delay-2">
+          <div class="feature-icon icon-lavender">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 3 4 6.5V11c0 5 3.4 8.9 8 10 4.6-1.1 8-5 8-10V6.5L12 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>Privacy Focused</h3>
+          <p>Your responses are processed in real time and never stored — your data stays yours, always.</p>
+        </div>
+
+        <div class="feature-card fade-in-up delay-3">
+          <div class="feature-icon icon-cyan">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="12" width="4" height="8" rx="1" stroke="currentColor" stroke-width="2"/><rect x="10" y="7" width="4" height="13" rx="1" stroke="currentColor" stroke-width="2"/><rect x="17" y="3" width="4" height="17" rx="1" stroke="currentColor" stroke-width="2"/></svg>
+          </div>
+          <h3>Machine Learning Model</h3>
+          <p>Backed by a FastAPI service serving a tuned gradient-boosted model, benchmarked for accuracy.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================= -->
+  <!-- MAIN DASHBOARD: FORM (left) + RESULTS (right) -->
+  <!-- ============================================= -->
+  <section class="workspace" id="predict">
+    <div class="section-inner workspace-grid">
+
+      <!-- ============== LEFT: INPUT FORM ============== -->
+      <form id="predictForm" class="form-column" novalidate>
+
+        <div class="form-header">
+          <h2>Tell us about your habits</h2>
+          <p>All fields help the model understand your lifestyle context.</p>
+        </div>
+
+        <!-- ---------- Card: Personal Information ---------- -->
+        <div class="form-card fade-in-up">
+          <div class="form-card-header">
+            <span class="card-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.4-4 4-6 7.5-6s6.1 2 7.5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </span>
+            <h3>Personal Information</h3>
+          </div>
+
+          <div class="field-grid">
+            <div class="field label-field">
+              <label for="age">Age</label>
+              <input type="number" id="age" name="age" min="10" max="100" placeholder="e.g. 20" required />
+              <span class="field-helper">Between 10 and 100</span>
+            </div>
+
+            <div class="field label-field">
+              <label for="gender">Gender</label>
+              <div class="select-wrap">
+                <select id="gender" name="gender" required>
+                  <option value="" disabled selected hidden>Select</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+                <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+            </div>
+
+            <div class="field label-field">
+              <label for="country">Country</label>
+              <div class="select-wrap">
+                <select id="country" name="country" required>
+                  <option value="" disabled selected hidden>Select</option>
+                  <option>India</option>
+                  <option>USA</option>
+                  <option>Canada</option>
+                  <option>Australia</option>
+                  <option>UK</option>
+                  <option>Germany</option>
+                  <option>Mexico</option>
+                  <option>Turkey</option>
+                  <option>France</option>
+                  <option>Other</option>
+                </select>
+                <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+            </div>
+
+            <div class="field label-field">
+              <label for="academic_level">Academic Level</label>
+              <div class="select-wrap">
+                <select id="academic_level" name="academic_level" required>
+                  <option value="" disabled selected hidden>Select</option>
+                  <option value="High School">High School</option>
+                  <option value="Undergraduate">Undergraduate</option>
+                  <option value="Graduate">Graduate</option>
+                </select>
+                <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ---------- Card: Social Media ---------- -->
+        <div class="form-card fade-in-up delay-1">
+          <div class="form-card-header">
+            <span class="card-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M3 8.5h18" stroke="currentColor" stroke-width="1.8"/></svg>
+            </span>
+            <h3>Social Media</h3>
+          </div>
+
+          <div class="field-grid">
+            <div class="field label-field">
+              <label for="most_used_platform">Most Used Platform</label>
+              <div class="select-wrap">
+                <select id="most_used_platform" name="most_used_platform" required>
+                  <option value="" disabled selected hidden>Select</option>
+                  <option>Instagram</option>
+                  <option>TikTok</option>
+                  <option>YouTube</option>
+                  <option>Facebook</option>
+                  <option>Snapchat</option>
+                  <option>Twitter</option>
+                  <option>LinkedIn</option>
+                  <option>WhatsApp</option>
+                  <option>WeChat</option>
+                  <option>LINE</option>
+                  <option>KakaoTalk</option>
+                  <option>VKontakte</option>
+                </select>
+                <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+            </div>
+
+            <div class="field label-field">
+              <label for="purpose_of_use">Purpose of Use</label>
+              <div class="select-wrap">
+                <select id="purpose_of_use" name="purpose_of_use" required>
+                  <option value="" disabled selected hidden>Select</option>
+                  <option>Networking</option>
+                  <option>Education</option>
+                  <option>Entertainment</option>
+                  <option>News</option>
+                </select>
+                <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sliders for usage hours & unlocks -->
+          <div class="slider-field">
+            <div class="slider-label-row">
+              <label for="avg_daily_usage_hours">Average Daily Usage</label>
+              <input class="slider-value-input" id="usageValue" type="number" min="0" max="24" step="0.1" value="4.0" aria-label="Average daily usage hours" />
+            </div>
+            <input type="range" id="avg_daily_usage_hours" name="avg_daily_usage_hours" min="0" max="24" step="0.1" value="4.0" class="slider slider-blue" />
+          </div>
+
+          <div class="slider-field">
+            <div class="slider-label-row">
+              <label for="daily_unlocks">Daily Unlocks</label>
+              <input class="slider-value-input slider-value-input--count" id="unlocksValue" type="number" min="0" max="300" step="1" value="60" aria-label="Daily unlocks" />
+            </div>
+            <input type="range" id="daily_unlocks" name="daily_unlocks" min="0" max="300" step="1" value="60" class="slider slider-lavender" />
+          </div>
+        </div>
+
+        <!-- ---------- Card: Healthy Lifestyle ---------- -->
+        <div class="form-card fade-in-up delay-2">
+          <div class="form-card-header">
+            <span class="card-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.4-9.5-9C.9 8.3 3 4 7 4c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 4 0 6.1 4.3 4.5 8-2.5 4.6-9.5 9-9.5 9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+            </span>
+            <h3>Healthy Lifestyle</h3>
+          </div>
+
+          <div class="slider-field">
+            <div class="slider-label-row">
+              <label for="study_hours">Study Hours</label>
+              <input class="slider-value-input" id="studyValue" type="number" min="0" max="24" step="0.1" value="6.5" aria-label="Study hours" />
+            </div>
+            <input type="range" id="study_hours" name="study_hours" min="0" max="24" step="0.1" value="6.5" class="slider slider-blue" />
+          </div>
+
+          <div class="slider-field">
+            <div class="slider-label-row">
+              <label for="sleep_hours_per_night">Sleep Hours</label>
+              <input class="slider-value-input" id="sleepValue" type="number" min="0" max="24" step="0.1" value="7.2" aria-label="Sleep hours per night" />
+            </div>
+            <input type="range" id="sleep_hours_per_night" name="sleep_hours_per_night" min="0" max="24" step="0.1" value="7.2" class="slider slider-green" />
+          </div>
+
+          <div class="slider-field">
+            <div class="slider-label-row">
+              <label for="physical_activity_hours">Physical Activity</label>
+              <input class="slider-value-input" id="activityValue" type="number" min="0" max="24" step="0.1" value="1.0" aria-label="Physical activity hours" />
+            </div>
+            <input type="range" id="physical_activity_hours" name="physical_activity_hours" min="0" max="24" step="0.1" value="1.0" class="slider slider-green" />
+          </div>
+
+          <div class="field label-field field-stress">
+            <label for="stress_level">Stress Level</label>
+            <div class="select-wrap">
+              <select id="stress_level" name="stress_level" required>
+                <option value="" disabled selected hidden>Select</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Very High">Very High</option>
+              </select>
+              <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- ---------- Predict Button ---------- -->
+        <button type="submit" id="predictBtn" class="btn btn-predict">
+          <span class="btn-predict-label">Predict My Score</span>
+          <span class="btn-predict-spinner" aria-hidden="true"></span>
+        </button>
+        <p id="formError" class="form-error" role="alert"></p>
+      </form>
+
+      <!-- ============== RIGHT: PREDICTION DASHBOARD ============== -->
+      <aside class="dashboard-column">
+
+        <!-- ---------- Arc Meter Card ---------- -->
+        <div class="dashboard-card arc-meter-card fade-in-up">
+          <div class="arc-meter-wrap">
+            <svg class="arc-svg" viewBox="0 0 280 200" width="100%" preserveAspectRatio="xMidYMid meet">
+              <defs>
+                <!-- Multi-stop gradient: red → orange → yellow → green -->
+                <linearGradient id="arcGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%"   stop-color="#E85D5D"/>
+                  <stop offset="30%"  stop-color="#E8813D"/>
+                  <stop offset="55%"  stop-color="#E8A33D"/>
+                  <stop offset="78%"  stop-color="#9BC84A"/>
+                  <stop offset="100%" stop-color="#2FB88A"/>
+                </linearGradient>
+                <filter id="needleGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+
+              <!-- Track arc — 180° semicircle, centre (140,148), r=116 -->
+              <path
+                class="arc-track"
+                d="M 24 148 A 116 116 0 0 1 256 148"
+                fill="none"
+                stroke-width="18"
+                stroke-linecap="round"
+              />
+
+              <!-- Coloured progress arc — driven by JS -->
+              <path
+                id="arcProgress"
+                class="arc-progress"
+                d="M 24 148 A 116 116 0 0 1 256 148"
+                fill="none"
+                stroke="url(#arcGradient)"
+                stroke-width="18"
+                stroke-linecap="round"
+              />
+
+              <!-- Needle dot — JS moves this via cx/cy -->
+              <circle id="arcNeedle" class="arc-needle" cx="24" cy="148" r="10" filter="url(#needleGlow)"/>
+              <circle id="arcNeedleInner" cx="24" cy="148" r="4.5" fill="#fff"/>
+
+              <!-- Score number rendered directly in SVG — always visible -->
+              <text id="scoreCounter" class="arc-score-text" x="140" y="175" text-anchor="middle" dominant-baseline="auto">--</text>
+              <text class="arc-max-text" x="140" y="194" text-anchor="middle" dominant-baseline="auto">/10</text>
+            </svg>
+          </div>
+
+          <!-- Status label + interpretation -->
+          <div class="arc-result">
+            <span id="statusBadge" class="status-badge status-idle">Awaiting input</span>
+            <p id="interpretationText" class="interpretation-text">
+              Fill in the form and press <strong>Predict My Score</strong> to see your personalized mental wellness insight here.
+            </p>
+            <button id="retestBtn" class="btn btn-retest" style="display:none;" type="button">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.36 2.64L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 3v5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Try Again
+            </button>
+          </div>
+        </div>
+
+        <!-- ---------- Summary Stat Cards ---------- -->
+        <div class="stat-grid">
+
+          <div class="stat-card fade-in-up delay-1">
+            <div class="stat-card-top">
+              <span class="stat-icon icon-blue">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3c-3 3.5-5 6.6-5 9.5A5 5 0 0 0 12 18a5 5 0 0 0 5-5.5C17 9.6 15 6.5 12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              </span>
+              <span class="stat-title">Sleep</span>
+            </div>
+            <div class="stat-ring-row">
+              <svg class="mini-ring" viewBox="0 0 60 60" width="52" height="52">
+                <circle cx="30" cy="30" r="24" fill="none" stroke-width="6" class="mini-ring-track"/>
+                <circle id="ringSleep" cx="30" cy="30" r="24" fill="none" stroke-width="6" stroke-linecap="round" class="mini-ring-progress ring-blue" transform="rotate(-90 30 30)"/>
+              </svg>
+              <div>
+                <span class="stat-value" id="statSleep">7.2 hrs</span>
+                <span class="stat-sub">per night</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stat-card fade-in-up delay-2">
+            <div class="stat-card-top">
+              <span class="stat-icon icon-green">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 19.5V6a2 2 0 0 1 2-2h10.5A1.5 1.5 0 0 1 18 5.5V19M4 19.5A1.5 1.5 0 0 0 5.5 21H18M4 19.5A1.5 1.5 0 0 1 5.5 18H18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              </span>
+              <span class="stat-title">Study</span>
+            </div>
+            <div class="stat-ring-row">
+              <svg class="mini-ring" viewBox="0 0 60 60" width="52" height="52">
+                <circle cx="30" cy="30" r="24" fill="none" stroke-width="6" class="mini-ring-track"/>
+                <circle id="ringStudy" cx="30" cy="30" r="24" fill="none" stroke-width="6" stroke-linecap="round" class="mini-ring-progress ring-green" transform="rotate(-90 30 30)"/>
+              </svg>
+              <div>
+                <span class="stat-value" id="statStudy">6.5 hrs</span>
+                <span class="stat-sub">per day</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stat-card fade-in-up delay-3">
+            <div class="stat-card-top">
+              <span class="stat-icon icon-lavender">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2.5" stroke="currentColor" stroke-width="1.8"/></svg>
+              </span>
+              <span class="stat-title">Social Media</span>
+            </div>
+            <div class="stat-ring-row">
+              <svg class="mini-ring" viewBox="0 0 60 60" width="52" height="52">
+                <circle cx="30" cy="30" r="24" fill="none" stroke-width="6" class="mini-ring-track"/>
+                <circle id="ringUsage" cx="30" cy="30" r="24" fill="none" stroke-width="6" stroke-linecap="round" class="mini-ring-progress ring-lavender" transform="rotate(-90 30 30)"/>
+              </svg>
+              <div>
+                <span class="stat-value" id="statUsage">4.0 hrs</span>
+                <span class="stat-sub">daily usage</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stat-card fade-in-up delay-4">
+            <div class="stat-card-top">
+              <span class="stat-icon icon-amber">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              </span>
+              <span class="stat-title">Stress</span>
+            </div>
+            <div class="stat-ring-row">
+              <svg class="mini-ring" viewBox="0 0 60 60" width="52" height="52">
+                <circle cx="30" cy="30" r="24" fill="none" stroke-width="6" class="mini-ring-track"/>
+                <circle id="ringStress" cx="30" cy="30" r="24" fill="none" stroke-width="6" stroke-linecap="round" class="mini-ring-progress ring-amber" transform="rotate(-90 30 30)"/>
+              </svg>
+              <div>
+                <span class="stat-value" id="statStress">Medium</span>
+                <span class="stat-sub">current level</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ---------- Meta Info Card ---------- -->
+        <div class="dashboard-card meta-card fade-in-up delay-2" id="about">
+          <div class="meta-row">
+            <span class="meta-label">Today's Date</span>
+            <span class="meta-value" id="todayDate">—</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Prediction Time</span>
+            <span class="meta-value" id="predictionTime">—</span>
+          </div>
+          <div class="badge-row">
+            <span class="tech-badge">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2 2 7l10 5 10-5-10-5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+              XGBoost
+            </span>
+            <span class="tech-badge">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+              FastAPI
+            </span>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============================================= -->
+  <!-- FOOTER -->
+  <!-- ============================================= -->
+  <footer class="footer">
+    <div class="section-inner footer-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 12h4l2 7 4-14 2 7h6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="brand-name">HealthScore AI</span>
+      </div>
+      <p class="footer-note">Built with HTML, CSS &amp; JavaScript · Served   by FastAPI + XGBoost</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
